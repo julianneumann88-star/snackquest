@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "org.julianneumann.snackquest",
+      "sha256_cert_fingerprints": [
+        "8B:4F:F2:A5:D8:25:F7:BA:63:C5:30:1F:C8:AD:55:11:B3:33:81:FD:10:8D:3B:49:4F:CB:A9:68:5C:93:66:2B"
+      ]
+    }
+  }
+]

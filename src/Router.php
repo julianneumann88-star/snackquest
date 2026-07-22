@@ -27,7 +27,11 @@ final class Router
     /** @return array{0: array, 1: array<string,string>}|null */
     public function match(Request $request): ?array
     {
-        $table = $this->routes[$request->method] ?? [];
+        // HTTP defines HEAD as the metadata-only counterpart of GET. Reuse the
+        // GET route table so uptime checks, crawlers and PWA analyzers receive
+        // the same status and headers without duplicating every public route.
+        $method = $request->method === 'HEAD' ? 'GET' : $request->method;
+        $table = $this->routes[$method] ?? [];
         if (isset($table[$request->path])) {
             return [$table[$request->path], []];
         }
@@ -49,4 +53,3 @@ final class Router
         return null;
     }
 }
-

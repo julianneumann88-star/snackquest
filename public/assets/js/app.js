@@ -4,7 +4,7 @@ const nav=qs('.site-nav'),toggle=qs('.nav-toggle');
 if(nav&&toggle)toggle.addEventListener('click',()=>{const open=nav.classList.toggle('is-open');toggle.setAttribute('aria-expanded',String(open))});
 qsa('[data-confirm]').forEach(form=>form.addEventListener('submit',event=>{if(!confirm(form.dataset.confirm||'Wirklich fortfahren?'))event.preventDefault()}));
 
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/snackquest/sw.js',{scope:'/snackquest/'}).catch(()=>{}));
+if('serviceWorker'in navigator)navigator.serviceWorker.register('/snackquest/sw.js',{scope:'/snackquest/'}).catch(()=>{});
 let installPrompt=null;
 window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();installPrompt=event;const visits=Number(localStorage.getItem('sq_visits')||0)+1;localStorage.setItem('sq_visits',String(visits));if(visits<3||qs('[data-install]'))return;const button=document.createElement('button');button.type='button';button.className='install-toast';button.dataset.install='';button.textContent='SnackQuest installieren';button.addEventListener('click',async()=>{if(!installPrompt)return;await installPrompt.prompt();installPrompt=null;button.remove()});document.body.append(button)});
 
