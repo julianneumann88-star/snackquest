@@ -26,14 +26,19 @@ $ogImage=$siteBase.'/assets/images/og-snackquest.png';
   <meta property="og:title" content="<?=e($title)?>">
   <meta property="og:description" content="<?=e($description)?>">
   <meta property="og:image" content="<?=e($ogImage)?>">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="SnackQuest – Scannen, bewerten und wiederfinden">
   <meta property="og:url" content="<?=e($canonical)?>">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<?=e($title)?>">
   <meta name="twitter:description" content="<?=e($description)?>">
   <meta name="twitter:image" content="<?=e($ogImage)?>">
+  <meta name="twitter:image:alt" content="SnackQuest – Scannen, bewerten und wiederfinden">
   <title><?=e($title)?></title>
   <link rel="manifest" href="<?=u('/manifest.webmanifest')?>">
-  <link rel="icon" href="<?=u('/assets/icons/favicon.svg')?>" type="image/svg+xml">
+  <link rel="icon" href="<?=u('/assets/icons/favicon-32.png')?>" sizes="32x32" type="image/png">
+  <link rel="icon" href="<?=u('/assets/icons/favicon-64.png')?>" sizes="64x64" type="image/png">
   <link rel="apple-touch-icon" href="<?=u('/assets/icons/icon-180.png')?>">
   <link rel="stylesheet" href="<?=u('/assets/css/app.css')?>?v=<?=e(\SnackQuest\Support\View::$appVersion)?>">
   <script defer src="<?=u('/assets/js/app.js')?>?v=<?=e(\SnackQuest\Support\View::$appVersion)?>"></script>

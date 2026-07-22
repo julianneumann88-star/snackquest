@@ -12,7 +12,7 @@ final class View
 {
     public static string $viewsDir = __DIR__ . '/../Views';
     public static string $basePath = '';
-    public static string $appVersion = '1.0.0';
+    public static string $appVersion = '1.0.1';
 
     /** Render a page template inside a layout. */
     public static function render(string $template, array $data = [], string $layout = 'layouts/base'): string
@@ -43,4 +43,3 @@ final class View
         return (string)ob_get_clean();
     }
 }
-

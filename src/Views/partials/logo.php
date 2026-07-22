@@ -1,1 +1,4 @@
-<svg class="logo" viewBox="0 0 214 46" role="img" aria-label="SnackQuest"><g fill="none" stroke="currentColor" stroke-width="3"><path d="M4 13V4h9M4 33v9h9M42 13V4h-9M42 33v9h-9"/><path d="M14 15h15M14 21h8M14 27h15M14 33h5"/></g><text x="54" y="31" fill="currentColor" font-size="24" font-weight="850" letter-spacing="-.5">SnackQuest</text></svg>
+<span class="logo" role="img" aria-label="SnackQuest">
+  <img class="logo-mark" src="<?=u('/assets/brand/snackquest-mark-256.png')?>" width="48" height="48" alt="" aria-hidden="true">
+  <span class="logo-word">Snack<span>Quest</span></span>
+</span>

@@ -13,7 +13,7 @@ final class ApiController extends BaseController
     public function health(Request $r,array $p):never
     {
         $db='ok';try{Database::pdo()->query('SELECT 1');}catch(\Throwable){$db='degraded';}
-        Response::json(['status'=>$db==='ok'?'ok':'degraded','version'=>(string)App::$config->get('app_version','1.0.0'),'database'=>$db,'open_food_facts'=>'configured','ai'=>(bool)App::$config->get('ai.enabled',false)?'optional':'off','request_id'=>App::$requestId]);
+        Response::json(['status'=>$db==='ok'?'ok':'degraded','version'=>(string)App::$config->get('app_version','1.0.1'),'database'=>$db,'open_food_facts'=>'configured','ai'=>(bool)App::$config->get('ai.enabled',false)?'optional':'off','request_id'=>App::$requestId]);
     }
 
     public function product(Request $r,array $p):never

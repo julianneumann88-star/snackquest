@@ -8,6 +8,7 @@
 /public/assets/js/scanner.js
 /playwright-report/
 /test-results/
+/tmp/
 /.env
 *.log
 *.sqlite

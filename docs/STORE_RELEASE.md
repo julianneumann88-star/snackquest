@@ -2,7 +2,15 @@
 
 SnackQuest ist zuerst eine installierbare PWA. PWABuilder hat die öffentliche Produktions-URL am 22. Juli 2026 erneut geprüft: Manifest, Service Worker, Service-Worker-Logik und Offline-Unterstützung wurden erkannt; der Bericht meldet die PWA als bereit für Store-Pakete.
 
-## Erzeugte Pakete
+## Markenupdate `v1.0.1`
+
+Das neue Logo ist in der öffentlichen PWA vollständig aktiv. Manifest und Packaging-Konfiguration referenzieren die neuen 512-/1024-Pixel-, Maskable- und Monochrome-Icons. Paket-ID und Bundle-ID bleiben `org.julianneumann.snackquest`; der bestehende Android-Schlüssel und der veröffentlichte Digital Asset Link bleiben unverändert.
+
+Die Android-Konfiguration wurde mit Version `1.0.1.0` und Version Code `2` sowie dem bestehenden Signaturschlüssel geprüft. Die iOS-Konfiguration wurde mit derselben Bundle-ID und der neuen 1024-Pixel-Iconquelle geprüft. PWABuilder nahm beide Builds an, lieferte trotz wiederholter, kontrollierter Läufe jedoch keinen Download aus. Auf der offiziellen Issue-Seite wurden am 22. Juli 2026 zahlreiche gleichartige Fehler gemeldet, darunter [#6161](https://github.com/pwa-builder/PWABuilder/issues/6161), [#6162](https://github.com/pwa-builder/PWABuilder/issues/6162), [#6166](https://github.com/pwa-builder/PWABuilder/issues/6166), [#6169](https://github.com/pwa-builder/PWABuilder/issues/6169) und [#6170](https://github.com/pwa-builder/PWABuilder/issues/6170).
+
+Die folgenden Pakete sind deshalb weiterhin die sicher archivierten `v1.0.0`-Pakete. Sie sind nicht als Store-Builds von `v1.0.1` deklariert und enthalten noch das vorherige App-Icon.
+
+## Archivierte Pakete `v1.0.0`
 
 ### Android
 

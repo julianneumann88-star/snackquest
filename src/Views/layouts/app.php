@@ -3,7 +3,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#fffdf5"><meta name="robots" content="noindex,nofollow"><title><?=e($title)?></title>
-  <link rel="manifest" href="<?=u('/manifest.webmanifest')?>"><link rel="icon" href="<?=u('/assets/icons/favicon.svg')?>" type="image/svg+xml"><link rel="apple-touch-icon" href="<?=u('/assets/icons/icon-180.png')?>"><link rel="stylesheet" href="<?=u('/assets/css/app.css')?>?v=<?=e(\SnackQuest\Support\View::$appVersion)?>">
+  <link rel="manifest" href="<?=u('/manifest.webmanifest')?>"><link rel="icon" href="<?=u('/assets/icons/favicon-32.png')?>" sizes="32x32" type="image/png"><link rel="icon" href="<?=u('/assets/icons/favicon-64.png')?>" sizes="64x64" type="image/png"><link rel="apple-touch-icon" href="<?=u('/assets/icons/icon-180.png')?>"><link rel="stylesheet" href="<?=u('/assets/css/app.css')?>?v=<?=e(\SnackQuest\Support\View::$appVersion)?>">
   <script defer src="<?=u('/assets/js/app.js')?>?v=<?=e(\SnackQuest\Support\View::$appVersion)?>"></script><script defer src="<?=u('/assets/js/share.js')?>?v=<?=e(\SnackQuest\Support\View::$appVersion)?>"></script>
 </head>
 <body class="app-body" data-user-id="<?=e((string)($user['id']??''))?>"><a class="skip-link" href="#main">Zum Inhalt springen</a><header class="app-header"><a class="brand brand-compact" href="<?=u('/app')?>" aria-label="SnackQuest Übersicht"><?php include __DIR__.'/../partials/logo.php';?></a><div class="app-user"><span><?=e($user['display_name']??'')?></span><form method="post" action="<?=u('/logout')?>"><?=$csrf??''?><button class="link-button" type="submit">Abmelden</button></form></div></header>
