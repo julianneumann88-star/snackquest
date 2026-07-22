@@ -13,7 +13,7 @@
   <section class="tag-cloud"><p class="eyebrow">Häufige Tags</p><?php foreach($profile['tags'] as $tag):?><span><?=e($tag['label'])?> <b><?=e($tag['uses'])?></b></span><?php endforeach;?></section>
 <?php endif;?>
 <section class="app-narrow ai-insight">
-  <p class="eyebrow">Optional · lokale GPT-OSS-Bridge</p>
+  <p class="eyebrow">Optional · private lokale KI-Bridge</p>
   <h2>Muster in Worte fassen</h2>
   <?php if(!empty($aiInsight)):?><blockquote><?=nl2br(e($aiInsight['result']))?></blockquote><small>Erstellt <?=e(date('d.m.Y',strtotime((string)$aiInsight['created_at'])))?> mit <?=e($aiInsight['model'])?> aus aggregierten Profildaten.</small><?php endif;?>
   <?php if(empty($aiAvailable)):?>

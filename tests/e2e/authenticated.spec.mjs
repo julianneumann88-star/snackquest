@@ -4,7 +4,7 @@ import path from 'node:path';
 
 const password = 'SnackQuest-2026-Test';
 const mailLog = path.resolve('logs/mails.log');
-const fixtureImage = path.resolve('public/assets/icons/icon-192.png');
+const fixtureImage = path.resolve('public/assets/icons/icon-v2-192.png');
 const sq = (url) => `/snackquest${url}`;
 
 async function latestVerificationUrl(email) {

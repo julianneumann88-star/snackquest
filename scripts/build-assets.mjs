@@ -56,12 +56,12 @@ await sharp(await placedMark(256, 0.94)).png().toFile('public/assets/brand/snack
 await sharp(await placedMark(512, 0.94)).png().toFile('public/assets/brand/snackquest-mark-512.png');
 
 for (const size of [180, 192, 512, 1024]) {
-  await appIcon(size, 0.76, `public/assets/icons/icon-${size}.png`);
+  await appIcon(size, 0.76, `public/assets/icons/icon-v2-${size}.png`);
 }
-await appIcon(512, 0.62, 'public/assets/icons/icon-maskable-512.png');
-await sharp(await placedMark(512, 0.68, ink)).png().toFile('public/assets/icons/icon-monochrome-512.png');
-await appIcon(32, 0.84, 'public/assets/icons/favicon-32.png');
-await appIcon(64, 0.84, 'public/assets/icons/favicon-64.png');
+await appIcon(512, 0.62, 'public/assets/icons/icon-maskable-v2-512.png');
+await sharp(await placedMark(512, 0.68, ink)).png().toFile('public/assets/icons/icon-monochrome-v2-512.png');
+await appIcon(32, 0.84, 'public/assets/icons/favicon-v2-32.png');
+await appIcon(64, 0.84, 'public/assets/icons/favicon-v2-64.png');
 
 const ogBase = Buffer.from(`
   <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">

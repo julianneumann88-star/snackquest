@@ -17,6 +17,9 @@ $ogImage=$siteBase.'/assets/images/og-snackquest.png';
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#fffdf5">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="SnackQuest">
   <meta name="description" content="<?=e($description)?>">
   <meta name="robots" content="<?=$indexable?'index,follow':'noindex,nofollow'?>">
   <link rel="canonical" href="<?=e($canonical)?>">
@@ -36,10 +39,10 @@ $ogImage=$siteBase.'/assets/images/og-snackquest.png';
   <meta name="twitter:image" content="<?=e($ogImage)?>">
   <meta name="twitter:image:alt" content="SnackQuest – Scannen, bewerten und wiederfinden">
   <title><?=e($title)?></title>
-  <link rel="manifest" href="<?=u('/manifest.webmanifest')?>">
-  <link rel="icon" href="<?=u('/assets/icons/favicon-32.png')?>" sizes="32x32" type="image/png">
-  <link rel="icon" href="<?=u('/assets/icons/favicon-64.png')?>" sizes="64x64" type="image/png">
-  <link rel="apple-touch-icon" href="<?=u('/assets/icons/icon-180.png')?>">
+  <link rel="manifest" href="<?=u('/manifest.webmanifest')?>?v=<?=e(\SnackQuest\Support\View::$appVersion)?>">
+  <link rel="icon" href="<?=u('/assets/icons/favicon-v2-32.png')?>" sizes="32x32" type="image/png">
+  <link rel="icon" href="<?=u('/assets/icons/favicon-v2-64.png')?>" sizes="64x64" type="image/png">
+  <link rel="apple-touch-icon" href="<?=u('/assets/icons/icon-v2-180.png')?>" sizes="180x180">
   <link rel="stylesheet" href="<?=u('/assets/css/app.css')?>?v=<?=e(\SnackQuest\Support\View::$appVersion)?>">
   <script defer src="<?=u('/assets/js/app.js')?>?v=<?=e(\SnackQuest\Support\View::$appVersion)?>"></script>
   <script defer src="<?=u('/assets/js/share.js')?>?v=<?=e(\SnackQuest\Support\View::$appVersion)?>"></script>

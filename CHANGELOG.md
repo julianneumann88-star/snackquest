@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2 – 2026-07-22
+
+- Versionierte PWA- und Apple-Touch-Icons verhindern, dass iOS nach einem Markenupdate das alte Home-Screen-Logo wiederverwendet.
+- Manifest und Service-Worker-Cache verwenden die neuen `v2`-Assets.
+
 ## 1.0.0 – 2026-07-22
 
 - Reale Registrierung, Verifizierung, Reset und Google-OAuth-PKCE-Integration.
@@ -8,5 +13,5 @@
 - Bewertungen, Preise, Kauforte, Fotos, Favoriten, Tags und Filter.
 - Sammlungen, Duelle mit Elo-Ranking, Quests und Geschmacksprofil.
 - Widerrufbare bereinigte Shares, PNG-Karten und Web Share API.
-- JSON-Export, vollständige Kontolöschung und optionale lokale GPT-OSS-Auswertung.
+- JSON-Export, vollständige Kontolöschung und optionale private lokale KI-Auswertung.
 - Responsive Light-PWA, Offline-Entwürfe, Accessibility- und Browser-Tests.

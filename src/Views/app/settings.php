@@ -6,7 +6,7 @@
     <label class="toggle-row">
       <span>
         <strong>Lokale KI-Auswertung</strong>
-        <small>Optional und standardmäßig aus. Nur aggregierte Bewertungsmuster werden an die private GPT-OSS-Bridge gesendet – niemals E-Mail, Notizen, Preise oder Fotos. Die App funktioniert vollständig ohne KI.<?=empty($aiAvailable)?' Die Bridge ist momentan nicht freigeschaltet.':''?></small>
+        <small>Optional und standardmäßig aus. Nur begrenzte, aggregierte Bewertungsmuster werden an die private lokale KI-Bridge gesendet – niemals E-Mail, Notizen, Preise, Fotos oder Produktkennungen. Die App funktioniert vollständig ohne KI.<?=empty($aiAvailable)?' Die Bridge ist momentan nicht freigeschaltet.':''?></small>
       </span>
       <input type="checkbox" name="ai_opt_in" value="1" <?=!empty($prefs['ai_opt_in'])?'checked':''?> <?=empty($aiAvailable)?'disabled':''?>>
     </label>
