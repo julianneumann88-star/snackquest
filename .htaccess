@@ -4,6 +4,7 @@ AddDefaultCharset utf-8
 RewriteEngine On
 RewriteBase /snackquest/
 RewriteRule ^public/ - [L]
+RewriteRule ^google36665cbf51e18bf9\.html$ public/google36665cbf51e18bf9.html [L]
 RewriteRule ^(src|config|logs|storage|migrations|bin|tests|docs|scripts|node_modules|\.git)(/|$) - [F,L]
 RewriteCond %{DOCUMENT_ROOT}/snackquest/public/$1 -f
 RewriteRule ^(.+)$ public/$1 [L]
