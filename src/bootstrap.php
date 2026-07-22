@@ -78,6 +78,10 @@ final class App
     public static function handleException(\Throwable $e): void
     {
         if (self::$handlingError) {
+            if (PHP_SAPI === 'cli') {
+                fwrite(STDERR, 'Interner Fehler. Referenz: ' . (self::$requestId ?: 'unbekannt') . PHP_EOL);
+                exit(1);
+            }
             http_response_code(500);
             echo 'Interner Fehler. Referenz: ' . htmlspecialchars(self::$requestId ?: 'unbekannt', ENT_QUOTES, 'UTF-8');
             exit;
@@ -96,6 +100,10 @@ final class App
         }
         while (ob_get_level() > 0) {
             @ob_end_clean();
+        }
+        if (PHP_SAPI === 'cli') {
+            fwrite(STDERR, 'Interner Fehler. Referenz: ' . (self::$requestId ?: 'unbekannt') . PHP_EOL);
+            exit(1);
         }
         http_response_code(500);
         header('Cache-Control: no-store');
@@ -156,4 +164,3 @@ final class App
         }
     }
 }
-

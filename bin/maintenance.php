@@ -11,10 +11,10 @@ App::boot();
 $pdo=Database::pdo();
 $now=gmdate('Y-m-d H:i:s');
 $cut90=gmdate('Y-m-d H:i:s',time()-90*86400);
-$cut2=gmdate('Y-m-d H:i:s',time()-2*86400);
+$cut2=time()-2*86400;
 $jobs=[
     [Database::table('auth_tokens'),"DELETE FROM %s WHERE expires_at<:cut",$now],
-    [Database::table('rate_limits'),"DELETE FROM %s WHERE window_started_at<:cut",$cut2],
+    [Database::table('rate_limits'),"DELETE FROM %s WHERE window_start<:cut",$cut2],
     [Database::table('ai_insights'),"DELETE FROM %s WHERE expires_at IS NOT NULL AND expires_at<:cut",$now],
     [Database::table('audit_events'),"DELETE FROM %s WHERE created_at<:cut",$cut90],
 ];

@@ -1,6 +1,6 @@
 # SnackQuest
 
-SnackQuest ist eine echte, private Snack-Bibliothek unter dem geplanten Produktpfad `https://julian-neumann.org/snackquest`. Barcodes werden per Kamera oder manuell erfasst, serverseitig über Open Food Facts aufgelöst und anschließend mit persönlichen 1–10-Bewertungen, Tags, Preisen, Kauforten, Fotos, Sammlungen, Duellen und Quests gespeichert.
+SnackQuest ist eine echte, private Snack-Bibliothek unter dem produktiven Pfad [julian-neumann.org/snackquest](https://julian-neumann.org/snackquest). Barcodes werden per Kamera oder manuell erfasst, serverseitig über Open Food Facts aufgelöst und anschließend mit persönlichen 1–10-Bewertungen, Tags, Preisen, Kauforten, Fotos, Sammlungen, Duellen und Quests gespeichert.
 
 ![SnackQuest Startseite](reports/visual/home-desktop.png)
 
