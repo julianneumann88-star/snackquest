@@ -1,0 +1,48 @@
+name: Daily maintenance
+
+on:
+  schedule:
+    - cron: "17 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: snackquest-production-maintenance
+  cancel-in-progress: false
+
+jobs:
+  maintenance:
+    name: Retention cleanup
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Configure dedicated SSH key
+        env:
+          IONOS_SSH_PRIVATE_KEY: ${{ secrets.IONOS_SSH_PRIVATE_KEY }}
+          IONOS_KNOWN_HOSTS: ${{ secrets.IONOS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p ~/.ssh
+          printf '%s\n' "$IONOS_SSH_PRIVATE_KEY" > ~/.ssh/snackquest_maintenance
+          printf '%s\n' "$IONOS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Run SnackQuest retention cleanup
+        env:
+          IONOS_SSH_HOST: ${{ secrets.IONOS_SSH_HOST }}
+          IONOS_SSH_PORT: ${{ secrets.IONOS_SSH_PORT }}
+          IONOS_SSH_USER: ${{ secrets.IONOS_SSH_USER }}
+        run: |
+          set -euo pipefail
+          maintenance_output="$(ssh \
+            -i ~/.ssh/snackquest_maintenance \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -p "$IONOS_SSH_PORT" \
+            "$IONOS_SSH_USER@$IONOS_SSH_HOST" \
+            "cd julian-neumann-org-staging-20260618-174746/snackquest && php8.3-cli bin/maintenance.php")"
+          printf '%s\n' "$maintenance_output"
+          grep -q '^Maintenance complete\.' <<< "$maintenance_output"
