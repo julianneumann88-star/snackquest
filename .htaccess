@@ -1,0 +1,24 @@
+Options -Indexes
+AddDefaultCharset utf-8
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /snackquest/
+RewriteRule ^public/ - [L]
+RewriteRule ^(src|config|logs|storage|migrations|bin|tests|docs|scripts|node_modules|\.git)(/|$) - [F,L]
+RewriteCond %{DOCUMENT_ROOT}/snackquest/public/$1 -f
+RewriteRule ^(.+)$ public/$1 [L]
+RewriteRule ^ public/index.php [L]
+</IfModule>
+<FilesMatch "\.(sql|md|lock|log|sh|ps1|gitignore|gitattributes|example|ini)$">
+Require all denied
+</FilesMatch>
+<IfModule mod_expires.c>
+ExpiresActive On
+ExpiresByType text/css "access plus 7 days"
+ExpiresByType application/javascript "access plus 7 days"
+ExpiresByType image/svg+xml "access plus 30 days"
+ExpiresByType image/png "access plus 30 days"
+ExpiresByType image/webp "access plus 30 days"
+ExpiresByType font/woff2 "access plus 1 year"
+ExpiresByType application/manifest+json "access plus 1 day"
+</IfModule>

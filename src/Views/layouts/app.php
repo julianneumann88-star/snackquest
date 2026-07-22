@@ -1,0 +1,12 @@
+<?php $title=$title??'SnackQuest';$flashes=$flashes??[];$user=$currentUser??[]; ?>
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#fffdf5"><meta name="robots" content="noindex,nofollow"><title><?=e($title)?></title>
+  <link rel="manifest" href="<?=u('/manifest.webmanifest')?>"><link rel="icon" href="<?=u('/assets/icons/favicon.svg')?>" type="image/svg+xml"><link rel="apple-touch-icon" href="<?=u('/assets/icons/icon-180.png')?>"><link rel="stylesheet" href="<?=u('/assets/css/app.css')?>?v=<?=e(\SnackQuest\Support\View::$appVersion)?>">
+  <script defer src="<?=u('/assets/js/app.js')?>?v=<?=e(\SnackQuest\Support\View::$appVersion)?>"></script><script defer src="<?=u('/assets/js/share.js')?>?v=<?=e(\SnackQuest\Support\View::$appVersion)?>"></script>
+</head>
+<body class="app-body" data-user-id="<?=e((string)($user['id']??''))?>"><a class="skip-link" href="#main">Zum Inhalt springen</a><header class="app-header"><a class="brand brand-compact" href="<?=u('/app')?>" aria-label="SnackQuest Übersicht"><?php include __DIR__.'/../partials/logo.php';?></a><div class="app-user"><span><?=e($user['display_name']??'')?></span><form method="post" action="<?=u('/logout')?>"><?=$csrf??''?><button class="link-button" type="submit">Abmelden</button></form></div></header>
+<aside class="side-nav" aria-label="App-Navigation"><a href="<?=u('/app')?>">Übersicht</a><a href="<?=u('/app/scan')?>">Scannen</a><a href="<?=u('/app/library')?>">Bibliothek</a><a href="<?=u('/app/collections')?>">Sammlungen</a><a href="<?=u('/app/battles')?>">Duelle</a><a href="<?=u('/app/quests')?>">Quests</a><a href="<?=u('/app/taste-profile')?>">Geschmack</a><a href="<?=u('/app/settings')?>">Einstellungen</a></aside>
+<?php foreach($flashes as $flash):?><div class="flash flash-<?=e($flash['type']??'info')?>" role="status"><?=e($flash['text']??'')?></div><?php endforeach;?>
+<main id="main" class="app-main"><?=$content?></main><nav class="bottom-nav" aria-label="Mobile App-Navigation"><a href="<?=u('/app')?>"><span>⌂</span>Heute</a><a href="<?=u('/app/library')?>"><span>▤</span>Bibliothek</a><a class="scan-tab" href="<?=u('/app/scan')?>" aria-label="Snack scannen"><span>▦</span>Scan</a><a href="<?=u('/app/battles')?>"><span>⇄</span>Duelle</a><a href="<?=u('/app/taste-profile')?>"><span>◎</span>Profil</a></nav></body></html>

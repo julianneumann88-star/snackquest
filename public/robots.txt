@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /snackquest/
+Disallow: /snackquest/app/
+Disallow: /snackquest/api/
+Disallow: /snackquest/auth/
+Disallow: /snackquest/login
+Disallow: /snackquest/register
+Disallow: /snackquest/forgot-password
+Disallow: /snackquest/reset-password
+Disallow: /snackquest/media/
+
+Sitemap: https://julian-neumann.org/snackquest/sitemap.xml

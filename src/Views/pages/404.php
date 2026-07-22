@@ -1,0 +1,1 @@
+<section class="page-hero"><p class="eyebrow">404</p><h1>Diese Tüte ist leer.</h1><p class="lead">Die gesuchte Seite gibt es nicht oder sie ist nicht für dich freigegeben.</p><a class="button" href="<?=u('/')?>">Zurück zu SnackQuest</a></section>

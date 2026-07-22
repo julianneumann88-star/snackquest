@@ -1,0 +1,1 @@
+<section class="page-hero"><p class="eyebrow">Offline</p><h1>Gerade ohne Netz.</h1><p class="lead">Dein App-Rahmen bleibt verfügbar. Neue Bewertungsentwürfe werden lokal gespeichert und beim nächsten Online-Start synchronisiert.</p><a class="button" href="<?=u('/app')?>">Erneut versuchen</a></section>

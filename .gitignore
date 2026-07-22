@@ -1,0 +1,16 @@
+/config/config.local.php
+/config/google-oauth.json
+/logs/*
+!/logs/.gitkeep
+/storage/*
+!/storage/.gitkeep
+/node_modules/
+/public/assets/js/scanner.js
+/playwright-report/
+/test-results/
+/.env
+*.log
+*.sqlite
+client_secret*.json
+/SNACKQUEST_AUTONOMOUS_MASTERPROMPT.md
+/scripts/deploy-snackquest.ps1

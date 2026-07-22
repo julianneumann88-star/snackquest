@@ -1,0 +1,1 @@
+<section class="page-hero"><p class="eyebrow">Technischer Fehler</p><h1>Das hat gerade nicht geknuspert.</h1><p class="lead">Bitte versuche es später noch einmal. Referenz: <?=e($requestId??'unbekannt')?></p><a class="button" href="<?=u('/')?>">Zur Startseite</a></section>
