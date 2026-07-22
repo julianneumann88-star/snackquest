@@ -8,5 +8,5 @@
 - Bewertungen, Preise, Kauforte, Fotos, Favoriten, Tags und Filter.
 - Sammlungen, Duelle mit Elo-Ranking, Quests und Geschmacksprofil.
 - Widerrufbare bereinigte Shares, PNG-Karten und Web Share API.
-- JSON-Export, vollständige Kontolöschung und optionale lokale GPT-OSS-Auswertung.
+- JSON-Export, vollständige Kontolöschung und optionale private lokale KI-Auswertung.
 - Responsive Light-PWA, Offline-Entwürfe, Accessibility- und Browser-Tests.

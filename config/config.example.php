@@ -8,6 +8,6 @@ return [
   'open_food_facts'=>['base_url'=>'https://world.openfoodfacts.org','user_agent'=>'SnackQuest/1.0 (https://julian-neumann.org/snackquest; contact via julian-neumann.org)','timeout_seconds'=>9,'cache_ttl_seconds'=>604800],
   'open_prices'=>['enabled'=>false,'base_url'=>'https://prices.openfoodfacts.org/api/v1'],
   'uploads'=>['dir'=>__DIR__.'/../storage/uploads','max_bytes'=>8000000],
-  'ai'=>['enabled'=>false,'base_url'=>'','api_key'=>'','model'=>'local/gpt-oss-20b','timeout_seconds'=>30],
+  'ai'=>['enabled'=>false,'base_url'=>'','api_key'=>'','model'=>'local/openai/gpt-oss-20b','timeout_seconds'=>30,'allowed_hosts'=>['julian-neumann.org']],
   'admin_user_ids'=>[],'log'=>['dir'=>__DIR__.'/../logs','level'=>'info'],
 ];

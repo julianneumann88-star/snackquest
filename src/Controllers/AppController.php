@@ -6,6 +6,7 @@ namespace SnackQuest\Controllers;
 use SnackQuest\App;
 use SnackQuest\Database;
 use SnackQuest\Http\Request;
+use SnackQuest\Http\RateLimiter;
 use SnackQuest\Http\Response;
 use SnackQuest\Http\Session;
 use SnackQuest\Services\BarcodeService;
@@ -108,7 +109,8 @@ final class AppController extends BaseController
     public function tasteProfile(Request $r,array $p):never{$this->render('app/taste-profile',['title'=>'Dein Geschmacksprofil','profile'=>$this->products->tasteProfile($this->userId()),'aiAvailable'=>$this->ai->available(),'aiOptedIn'=>$this->ai->optedIn($this->userId()),'aiInsight'=>$this->ai->latest($this->userId())],'layouts/app');}
     public function tasteInsight(Request $r,array $p):never
     {
-        try{$this->ai->generate($this->userId(),$this->products->tasteProfile($this->userId()));Session::flash('success','Deine lokale Auswertung ist bereit.');}
+        if(!RateLimiter::allow('ai-insight:user:'.$this->userId(),4,3600)){Session::flash('error','Du hast die private Auswertung gerade mehrfach erstellt. Bitte warte etwas.');$this->redirect('/app/taste-profile');}
+        try{$this->ai->generate($this->userId(),$this->products->tasteProfile($this->userId()));Session::flash('success','Deine private Auswertung ist bereit.');}
         catch(\RuntimeException $e){Session::flash('error',$e->getMessage());}
         $this->redirect('/app/taste-profile');
     }

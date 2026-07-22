@@ -1,6 +1,6 @@
 # Architektur
 
-Browser → IONOS Apache/PHP 8.3 → MariaDB. Externe serverseitige Verbindungen bestehen zu Open Food Facts, IONOS SMTP, Google OAuth und – nur nach Opt-in – zur privaten GPT-OSS-Bridge. Statische PWA-Dateien liegen im selben `/snackquest`-Pfad.
+Browser → IONOS Apache/PHP 8.3 → MariaDB. Externe serverseitige Verbindungen bestehen zu Open Food Facts, IONOS SMTP, Google OAuth und – nur nach Opt-in – zur privaten lokalen KI-Bridge. Statische PWA-Dateien liegen im selben `/snackquest`-Pfad.
 
 ```mermaid
 flowchart LR
@@ -10,7 +10,7 @@ flowchart LR
   S --> O["Open Food Facts v3"]
   S --> G["Google OAuth / OIDC"]
   S --> M["IONOS SMTP"]
-  S -. "Opt-in, Aggregate" .-> A["private GPT-OSS Bridge"]
+  S -. "Opt-in, begrenzte Aggregate" .-> A["private lokale KI-Bridge"]
 ```
 
 ## Grenzen
