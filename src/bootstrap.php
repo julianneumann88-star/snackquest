@@ -62,7 +62,7 @@ final class App
         // can show the neutral branded error page.
         View::$viewsDir = __DIR__ . '/Views';
         View::$basePath = (string)self::$config->get('base_path', '');
-        View::$appVersion = (string)self::$config->get('app_version', '1.0.1');
+        View::$appVersion = (string)self::$config->get('app_version', '1.0.2');
 
         Database::init(self::$config);
     }
