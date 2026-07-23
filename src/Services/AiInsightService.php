@@ -74,7 +74,7 @@ final class AiInsightService
             return $cached;
         }
 
-        $model = (string)$this->config->get('ai.model', 'local/openai/gpt-oss-20b');
+        $model = (string)$this->config->get('ai.model', 'local/runtime');
         $payload = json_encode([
             'model' => $model,
             'messages' => [
