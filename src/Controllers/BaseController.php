@@ -74,6 +74,10 @@ abstract class BaseController
         $data['flashes'] = Session::pullFlashes();
         $data['isLoggedIn'] = Session::userId() !== null;
         $data['currentUser'] ??= Session::userId() !== null ? $this->currentUser() : null;
+        $data['clearReviewDraft'] = Session::get('_clear_review_draft', '');
+        $data['clearReviewBefore'] = Session::get('_clear_review_before', 0);
+        Session::remove('_clear_review_draft');
+        Session::remove('_clear_review_before');
         $data['csrf'] = \SnackQuest\Http\Csrf::field();
         Response::html(View::render($template, $data, $layout), $status);
     }

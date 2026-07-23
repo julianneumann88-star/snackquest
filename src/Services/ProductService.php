@@ -16,6 +16,73 @@ final class ProductService
         return ['stats' => $stats, 'recent' => $this->list($userId, ['sort' => 'recent', 'limit' => 6])];
     }
 
+    /**
+     * Pick a personal, positively rated snack without immediately repeating recent
+     * picks. This stays fully local and deterministic in its eligibility rules;
+     * only the final weighted draw is random.
+     *
+     * @param list<string> $excludedProductKeys
+     */
+    public function pickForUser(int $userId, array $excludedProductKeys = []): ?array
+    {
+        $entries = array_values(array_filter(
+            $this->list($userId, ['sort' => 'rating', 'limit' => 200]),
+            static fn(array $entry): bool =>
+                empty($entry['never_again'])
+                && ($entry['buy_again'] ?? 'maybe') !== 'no'
+                && (int)($entry['overall_rating'] ?? 0) >= 5
+        ));
+        if ($entries === []) {
+            return null;
+        }
+
+        $recentKeys = array_slice(array_values(array_filter(
+            $excludedProductKeys,
+            static fn(mixed $key): bool => is_string($key) && $key !== ''
+        )), -8);
+        $excluded = array_fill_keys($recentKeys, true);
+        $fresh = array_values(array_filter(
+            $entries,
+            static fn(array $entry): bool => !isset($excluded[(string)$entry['product_key']])
+        ));
+        if ($fresh !== []) {
+            $entries = $fresh;
+        } elseif (count($entries) > 1 && $recentKeys !== []) {
+            $lastKey = (string)$recentKeys[array_key_last($recentKeys)];
+            $withoutImmediateRepeat = array_values(array_filter(
+                $entries,
+                static fn(array $entry): bool => (string)$entry['product_key'] !== $lastKey
+            ));
+            if ($withoutImmediateRepeat !== []) {
+                $entries = $withoutImmediateRepeat;
+            }
+        }
+
+        $weighted = [];
+        $totalWeight = 0;
+        foreach ($entries as $entry) {
+            $rating = max(1, min(10, (int)($entry['overall_rating'] ?? 1)));
+            $weight = ($rating * $rating)
+                + (!empty($entry['favorite']) ? 24 : 0)
+                + (($entry['buy_again'] ?? '') === 'yes' ? 18 : 4)
+                + (!empty($entry['movie_night']) ? 4 : 0);
+            $totalWeight += $weight;
+            $weighted[] = ['entry' => $entry, 'ceiling' => $totalWeight];
+        }
+
+        $draw = random_int(1, max(1, $totalWeight));
+        $picked = $weighted[array_key_last($weighted)]['entry'];
+        foreach ($weighted as $candidate) {
+            if ($draw <= $candidate['ceiling']) {
+                $picked = $candidate['entry'];
+                break;
+            }
+        }
+
+        $picked['pick_reason'] = $this->pickReason($picked);
+        return $picked;
+    }
+
     public function list(int $userId, array $filters = []): array
     {
         $table = Database::table('user_product_entries');
@@ -98,22 +165,35 @@ final class ProductService
         $name = $this->clean($product['name'] ?? '', 240);
         if ($key === '' || $name === '') throw new \InvalidArgumentException('Produktdaten sind unvollständig.');
         $table = Database::table('user_product_entries');
-        $now = gmdate('Y-m-d H:i:s');
-        $params = [
-            'u'=>$userId,'k'=>$key,'b'=>($product['barcode'] ?? '') !== '' ? $product['barcode'] : null,
-            'cid'=>isset($product['custom_id']) ? (int)$product['custom_id'] : null,'n'=>$name,'brand'=>$this->clean($product['brand'] ?? '',160),
-            'cat'=>$this->clean($product['categories'] ?? ($product['category'] ?? ''),160),'img'=>$this->clean($product['image_small'] ?? ($product['image'] ?? ''),700),
-            'o'=>$rating,'taste'=>$this->rating($input['taste_rating'] ?? null),'texture'=>$this->rating($input['texture_rating'] ?? null),
-            'value'=>$this->rating($input['value_rating'] ?? null),'pack'=>$this->rating($input['packaging_rating'] ?? null),'portion'=>$this->rating($input['portion_rating'] ?? null),
-            'ba'=>$buyAgain,'fav'=>isset($input['favorite']) ? 1 : 0,'never'=>($buyAgain === 'no' || isset($input['never_again'])) ? 1 : 0,
-            'movie'=>isset($input['movie_night']) ? 1 : 0,'note'=>$this->clean($input['note'] ?? '',3000),'t'=>$now,'t2'=>$now,'t3'=>$now,'t4'=>$now,
-        ];
         $sql = Database::driver() === 'sqlite'
             ? "INSERT INTO {$table}(user_id,product_key,barcode,custom_product_id,product_name,brand,category,image_url,overall_rating,taste_rating,texture_rating,value_rating,packaging_rating,portion_rating,buy_again,favorite,never_again,movie_night,note,first_tried_at,last_tried_at,created_at,updated_at) VALUES(:u,:k,:b,:cid,:n,:brand,:cat,:img,:o,:taste,:texture,:value,:pack,:portion,:ba,:fav,:never,:movie,:note,:t,:t2,:t3,:t4) ON CONFLICT(user_id,product_key) DO UPDATE SET product_name=:n,brand=:brand,category=:cat,image_url=:img,overall_rating=:o,taste_rating=:taste,texture_rating=:texture,value_rating=:value,packaging_rating=:pack,portion_rating=:portion,buy_again=:ba,favorite=:fav,never_again=:never,movie_night=:movie,note=:note,last_tried_at=:t2,updated_at=:t4"
             : "INSERT INTO {$table}(user_id,product_key,barcode,custom_product_id,product_name,brand,category,image_url,overall_rating,taste_rating,texture_rating,value_rating,packaging_rating,portion_rating,buy_again,favorite,never_again,movie_night,note,first_tried_at,last_tried_at,created_at,updated_at) VALUES(:u,:k,:b,:cid,:n,:brand,:cat,:img,:o,:taste,:texture,:value,:pack,:portion,:ba,:fav,:never,:movie,:note,:t,:t2,:t3,:t4) ON DUPLICATE KEY UPDATE product_name=VALUES(product_name),brand=VALUES(brand),category=VALUES(category),image_url=VALUES(image_url),overall_rating=VALUES(overall_rating),taste_rating=VALUES(taste_rating),texture_rating=VALUES(texture_rating),value_rating=VALUES(value_rating),packaging_rating=VALUES(packaging_rating),portion_rating=VALUES(portion_rating),buy_again=VALUES(buy_again),favorite=VALUES(favorite),never_again=VALUES(never_again),movie_night=VALUES(movie_night),note=VALUES(note),last_tried_at=VALUES(last_tried_at),updated_at=VALUES(updated_at)";
         $pdo = Database::pdo();
-        $pdo->beginTransaction();
+        $ownsTransaction = !$pdo->inTransaction();
+        if ($ownsTransaction) {
+            $pdo->beginTransaction();
+        }
         try {
+            if ($ownsTransaction) {
+                $this->acquireSyncLock($userId, $key);
+            }
+            // The per-product lock and transaction must precede the revision read.
+            // Offline sync already owns this same lock before calling saveReview().
+            $previous = $this->findEntryByKey($userId, $key);
+            $nowEpoch = time();
+            if ($previous !== null) {
+                $nowEpoch = max($nowEpoch, self::parseDatabaseUtc((string)$previous['updated_at']) + 1);
+            }
+            $now = gmdate('Y-m-d H:i:s', $nowEpoch);
+            $params = [
+                'u'=>$userId,'k'=>$key,'b'=>($product['barcode'] ?? '') !== '' ? $product['barcode'] : null,
+                'cid'=>isset($product['custom_id']) ? (int)$product['custom_id'] : null,'n'=>$name,'brand'=>$this->clean($product['brand'] ?? '',160),
+                'cat'=>$this->clean($product['categories'] ?? ($product['category'] ?? ''),160),'img'=>$this->clean($product['image_small'] ?? ($product['image'] ?? ''),700),
+                'o'=>$rating,'taste'=>$this->rating($input['taste_rating'] ?? null),'texture'=>$this->rating($input['texture_rating'] ?? null),
+                'value'=>$this->rating($input['value_rating'] ?? null),'pack'=>$this->rating($input['packaging_rating'] ?? null),'portion'=>$this->rating($input['portion_rating'] ?? null),
+                'ba'=>$buyAgain,'fav'=>isset($input['favorite']) ? 1 : 0,'never'=>($buyAgain === 'no' || isset($input['never_again'])) ? 1 : 0,
+                'movie'=>isset($input['movie_night']) ? 1 : 0,'note'=>$this->clean($input['note'] ?? '',3000),'t'=>$now,'t2'=>$now,'t3'=>$now,'t4'=>$now,
+            ];
             $pdo->prepare($sql)->execute($params);
             $entry = $this->findEntryByKey($userId, $key);
             if (!$entry) throw new \RuntimeException('Bewertung konnte nicht geladen werden.');
@@ -121,12 +201,209 @@ final class ProductService
             if (($input['price'] ?? '') !== '') {
                 $this->addPrice($userId, $key, $input);
             }
-            $pdo->commit();
+            if ($ownsTransaction) {
+                $pdo->commit();
+            }
             return (int)$entry['id'];
         } catch (\Throwable $e) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            if ($ownsTransaction && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
             throw $e;
         }
+    }
+
+    /**
+     * Persist an offline review exactly once across sessions and concurrent retries.
+     *
+     * Review, tags, optional price and receipt share one transaction. If two
+     * requests race with the same UUID, the unique receipt constraint rolls the
+     * losing transaction (including its price row) back.
+     *
+     * @return array{entry_id:int,duplicate:bool,server_updated_at:int}
+     */
+    public function syncReview(
+        int $userId,
+        array $product,
+        array $input,
+        string $syncId,
+        int $baseUpdatedAt
+    ): array {
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $syncId) !== 1) {
+            throw new \InvalidArgumentException('Die Synchronisations-ID ist ungültig.');
+        }
+        if ($baseUpdatedAt < 0) {
+            throw new \InvalidArgumentException('Die Basisversion ist ungültig.');
+        }
+
+        $pdo = Database::pdo();
+        $receipts = Database::table('sync_receipts');
+        $key = $this->clean($product['key'] ?? '', 80);
+        if ($key === '') {
+            throw new \InvalidArgumentException('Produktdaten sind unvollständig.');
+        }
+
+        $pdo->beginTransaction();
+        try {
+            $this->acquireSyncLock($userId, $key);
+            $existingReceipt = $this->syncReceipt($userId, $syncId);
+            if ($existingReceipt !== null) {
+                $entry = $this->findEntry($userId, (int)$existingReceipt['entry_id']);
+                if ($entry === null) {
+                    throw new \RuntimeException('Synchronisierte Bewertung wurde nicht gefunden.');
+                }
+                $pdo->commit();
+                return [
+                    'entry_id'=>(int)$existingReceipt['entry_id'],
+                    'duplicate'=>true,
+                    'server_updated_at'=>self::parseDatabaseUtc((string)$entry['updated_at']),
+                ];
+            }
+
+            $serverEntry = $this->findEntryByKey($userId, $key);
+            if ($serverEntry !== null) {
+                $serverUpdatedAt = self::parseDatabaseUtc((string)$serverEntry['updated_at']);
+                if ($serverUpdatedAt > $baseUpdatedAt) {
+                    throw new ReviewConflictException($serverUpdatedAt);
+                }
+            }
+
+            $entryId = $this->saveReview($userId, $product, $input);
+            $now = gmdate('Y-m-d H:i:s');
+            $insert = $pdo->prepare(
+                "INSERT INTO {$receipts}(user_id,sync_id,entry_id,created_at,completed_at) "
+                . "VALUES(:u,:sync,:entry,:created,:completed)"
+            );
+            $insert->execute([
+                'u'=>$userId,
+                'sync'=>$syncId,
+                'entry'=>$entryId,
+                'created'=>$now,
+                'completed'=>$now,
+            ]);
+            $savedEntry = $this->findEntry($userId, $entryId);
+            if ($savedEntry === null) {
+                throw new \RuntimeException('Synchronisierte Bewertung wurde nicht gefunden.');
+            }
+            $serverUpdatedAt = self::parseDatabaseUtc((string)$savedEntry['updated_at']);
+            $pdo->commit();
+            return [
+                'entry_id'=>$entryId,
+                'duplicate'=>false,
+                'server_updated_at'=>$serverUpdatedAt,
+            ];
+        } catch (\PDOException $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            if ($this->isUniqueViolation($e)) {
+                $receipt = $this->syncReceipt($userId, $syncId);
+                if ($receipt !== null) {
+                    $entry = $this->findEntry($userId, (int)$receipt['entry_id']);
+                    if ($entry !== null) {
+                        return [
+                            'entry_id'=>(int)$receipt['entry_id'],
+                            'duplicate'=>true,
+                            'server_updated_at'=>self::parseDatabaseUtc((string)$entry['updated_at']),
+                        ];
+                    }
+                }
+            }
+            throw $e;
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Resolve a committed receipt before any optional external product lookup.
+     * This makes a lost-response retry succeed even while Open Food Facts is
+     * temporarily unavailable.
+     *
+     * @return array{entry_id:int,duplicate:true,server_updated_at:int}|null
+     */
+    public function completedSync(int $userId, string $syncId): ?array
+    {
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/', $syncId) !== 1) {
+            throw new \InvalidArgumentException('Die Synchronisations-ID ist ungültig.');
+        }
+        $receipt = $this->syncReceipt($userId, $syncId);
+        if ($receipt === null) {
+            return null;
+        }
+        $entry = $this->findEntry($userId, (int)$receipt['entry_id']);
+        if ($entry === null) {
+            throw new \RuntimeException('Synchronisierte Bewertung wurde nicht gefunden.');
+        }
+        return [
+            'entry_id'=>(int)$receipt['entry_id'],
+            'duplicate'=>true,
+            'server_updated_at'=>self::parseDatabaseUtc((string)$entry['updated_at']),
+        ];
+    }
+
+    /**
+     * Parse MariaDB/SQLite DATETIME values as UTC, independent of PHP's local
+     * timezone. Invalid database values fail closed instead of weakening conflict
+     * detection.
+     */
+    public static function parseDatabaseUtc(string $value): int
+    {
+        $utc = new \DateTimeZone('UTC');
+        $date = \DateTimeImmutable::createFromFormat('!Y-m-d H:i:s', trim($value), $utc);
+        $errors = \DateTimeImmutable::getLastErrors();
+        if (
+            $date === false
+            || ($errors !== false && ((int)$errors['warning_count'] > 0 || (int)$errors['error_count'] > 0))
+        ) {
+            throw new \RuntimeException('Ungültiger UTC-Zeitstempel in der Datenbank.');
+        }
+        return $date->getTimestamp();
+    }
+
+    private function syncReceipt(int $userId, string $syncId): ?array
+    {
+        $table = Database::table('sync_receipts');
+        $stmt = Database::pdo()->prepare(
+            "SELECT entry_id,completed_at FROM {$table} WHERE user_id=:u AND sync_id=:sync LIMIT 1"
+        );
+        $stmt->execute(['u'=>$userId, 'sync'=>$syncId]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
+    /**
+     * Upserting this narrow row obtains an exclusive transaction lock before the
+     * server revision is inspected. That prevents two different sync UUIDs with
+     * the same base revision from both passing the conflict check.
+     */
+    private function acquireSyncLock(int $userId, string $productKey): void
+    {
+        $table = Database::table('sync_locks');
+        $params = [
+            'u'=>$userId,
+            'k'=>$productKey,
+            't'=>gmdate('Y-m-d H:i:s'),
+        ];
+        $sql = Database::driver() === 'sqlite'
+            ? "INSERT INTO {$table}(user_id,product_key,touched_at) VALUES(:u,:k,:t) "
+                . "ON CONFLICT(user_id,product_key) DO UPDATE SET touched_at=:t"
+            : "INSERT INTO {$table}(user_id,product_key,touched_at) VALUES(:u,:k,:t) "
+                . "ON DUPLICATE KEY UPDATE touched_at=VALUES(touched_at)";
+        Database::pdo()->prepare($sql)->execute($params);
+    }
+
+    private function isUniqueViolation(\PDOException $error): bool
+    {
+        $sqlState = (string)$error->getCode();
+        $driverCode = (int)($error->errorInfo[1] ?? 0);
+        return $sqlState === '23000'
+            || $sqlState === '19'
+            || $driverCode === 1062
+            || $driverCode === 19;
     }
 
     public function tagsForEntry(int $entryId): array
@@ -294,5 +571,19 @@ final class ProductService
     private function clean(mixed $value, int $max): string
     {
         $value=(string)preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]+/u',' ',(string)$value);return mb_substr(trim((string)preg_replace('/\s+/u',' ',$value)),0,$max);
+    }
+
+    private function pickReason(array $entry): string
+    {
+        if (!empty($entry['favorite']) && ($entry['buy_again'] ?? '') === 'yes') {
+            return 'Einer deiner Favoriten, den du wieder kaufen würdest.';
+        }
+        if ((int)($entry['overall_rating'] ?? 0) >= 9) {
+            return 'Eine deiner stärksten Bewertungen.';
+        }
+        if (($entry['buy_again'] ?? '') === 'yes') {
+            return 'Von dir ausdrücklich zum Wiederkauf markiert.';
+        }
+        return 'Passt zu deinen bisher positiven Bewertungen.';
     }
 }

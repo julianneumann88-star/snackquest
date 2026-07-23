@@ -19,7 +19,10 @@ final class Response
         header('X-Content-Type-Options: nosniff');
         header('X-Frame-Options: DENY');
         header('Referrer-Policy: strict-origin-when-cross-origin');
-        header('Permissions-Policy: camera=(self), microphone=(), geolocation=()');
+        header('Permissions-Policy: camera=(self), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()');
+        header('Cross-Origin-Opener-Policy: same-origin');
+        header('Cross-Origin-Resource-Policy: same-origin');
+        header('Origin-Agent-Cluster: ?1');
         header(
             "Content-Security-Policy: default-src 'self'; "
             . "img-src 'self' data: blob: https://images.openfoodfacts.org https://world.openfoodfacts.org https://lh3.googleusercontent.com; "
@@ -28,6 +31,7 @@ final class Response
             . "connect-src 'self'; worker-src 'self' blob:; "
             . "font-src 'self'; "
             . "frame-src https://www.youtube-nocookie.com; "
+            . "object-src 'none'; manifest-src 'self'; media-src 'self' blob:; "
             . "base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
         );
         if (($_SERVER['HTTPS'] ?? '') !== '') {
@@ -39,6 +43,10 @@ final class Response
     {
         http_response_code($status);
         header('Content-Type: text/html; charset=utf-8');
+        if (Session::userId() !== null) {
+            header('Cache-Control: private, no-store');
+            header('Vary: Cookie');
+        }
         echo $body;
         exit;
     }

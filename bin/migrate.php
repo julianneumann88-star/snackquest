@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 use SnackQuest\App;
 use SnackQuest\Database;
+use SnackQuest\Services\GameService;
+use SnackQuest\Services\ProductService;
 
 require dirname(__DIR__) . '/src/bootstrap.php';
 
@@ -68,6 +70,10 @@ try {
                 continue;
             }
             $pdo->exec($stmt);
+        }
+        if ($name === '003_battle_idempotency.sql') {
+            $battleCount = (new GameService(new ProductService()))->rebuildRankingsFromCanonicalBattles();
+            echo "REBUILT: {$battleCount} canonical battle ranking(s)\n";
         }
         $ins = $pdo->prepare("INSERT INTO {$migTable} (filename, applied_at) VALUES (:f, :t)");
         $ins->execute(['f' => $name, 't' => gmdate('Y-m-d H:i:s')]);

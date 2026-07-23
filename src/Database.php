@@ -24,6 +24,7 @@ final class Database
             $path = (string)$config->get('db.sqlite_path', ':memory:');
             $pdo = new \PDO('sqlite:' . $path, null, null, self::options());
             $pdo->exec('PRAGMA foreign_keys = ON');
+            $pdo->exec('PRAGMA busy_timeout = 8000');
         } else {
             $dsn = sprintf(
                 'mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
@@ -79,4 +80,3 @@ final class Database
         ];
     }
 }
-

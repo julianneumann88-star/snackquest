@@ -14,15 +14,21 @@ final class Session
         if (session_status() === PHP_SESSION_ACTIVE) {
             return;
         }
+        ini_set('session.use_strict_mode', '1');
+        ini_set('session.use_only_cookies', '1');
+        ini_set('session.cookie_httponly', '1');
         session_name($name);
+        $https = strtolower((string)($_SERVER['HTTPS'] ?? ''));
+        $secure = ($https !== '' && $https !== 'off') || (int)($_SERVER['SERVER_PORT'] ?? 0) === 443;
         session_set_cookie_params([
             'lifetime' => 0,
             'path'     => ($basePath === '' ? '/' : $basePath . '/'),
-            'secure'   => ($_SERVER['HTTPS'] ?? '') !== '',
+            'secure'   => $secure,
             'httponly' => true,
             'samesite' => 'Lax',
         ]);
         session_start();
+        self::maintainLogin();
     }
 
     public static function regenerate(): void
@@ -68,9 +74,12 @@ final class Session
 
     public static function login(int $userId): void
     {
+        unset($_SESSION['_csrf']);
         self::regenerate();
         $_SESSION['user_id'] = $userId;
         $_SESSION['login_at'] = time();
+        $_SESSION['last_activity_at'] = time();
+        $_SESSION['regenerated_at'] = time();
     }
 
     public static function logout(): void
@@ -81,6 +90,26 @@ final class Session
             setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
         }
         session_destroy();
+    }
+
+    private static function maintainLogin(): void
+    {
+        if (!isset($_SESSION['user_id']) || !is_int($_SESSION['user_id'])) {
+            return;
+        }
+        $now = time();
+        $loginAt = (int)($_SESSION['login_at'] ?? $now);
+        $lastActivity = (int)($_SESSION['last_activity_at'] ?? $now);
+        if ($now - $loginAt > 7 * 24 * 60 * 60 || $now - $lastActivity > 12 * 60 * 60) {
+            $_SESSION = [];
+            self::regenerate();
+            return;
+        }
+        if ($now - (int)($_SESSION['regenerated_at'] ?? 0) > 30 * 60) {
+            self::regenerate();
+            $_SESSION['regenerated_at'] = $now;
+        }
+        $_SESSION['last_activity_at'] = $now;
     }
 
 }

@@ -16,7 +16,7 @@ SnackQuest ist eine echte, private Snack-Bibliothek unter dem produktiven Pfad [
 - Native `BarcodeDetector`-Erkennung mit ZXing-Fallback und manuellem EAN/UPC-Fallback.
 - Open Food Facts API v3 mit Server-Cache, Rate-Limit und klarer Quellenangabe.
 - Installierbare PWA; private Offline-Entwürfe sind pro Konto isoliert und werden beim Logout gelöscht.
-- Optionale lokale GPT-OSS-Auswertung nur nach Opt-in und nur mit aggregierten Profildaten.
+- Optionale private lokale KI-Auswertung nur nach Opt-in und nur mit begrenzten aggregierten Profildaten.
 - Kein öffentlicher Feed. Bereinigte Share-Momentaufnahmen entstehen nur ausdrücklich und sind widerrufbar.
 
 ## Stack
