@@ -65,6 +65,7 @@ function RemoveDeployTempBestEffort([string]$Path) {
 
 function Invoke-Verification {
   $commands = @(
+    @('npm', @('ci', '--no-audit', '--no-fund')),
     @('npm', @('run', 'build')),
     @('npm', @('run', 'lint')),
     @('npm', @('run', 'audit:secrets')),

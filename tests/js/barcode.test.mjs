@@ -145,6 +145,11 @@ const livePromotion = deploy.indexOf('$promotion = SshCmd $promoteCommand');
 if (stagedMigration < 0 || livePromotion < 0 || stagedMigration > livePromotion) {
   throw new Error('required database migrations must finish before the staged release receives live traffic');
 }
+const deterministicInstall = deploy.indexOf("@('npm', @('ci', '--no-audit', '--no-fund'))");
+const verifiedBuild = deploy.indexOf("@('npm', @('run', 'build'))");
+if (deterministicInstall < 0 || verifiedBuild < 0 || deterministicInstall > verifiedBuild) {
+  throw new Error('deployment verification must install locked dependencies before building');
+}
 
 const rootHtaccess = await readFile('.htaccess', 'utf8');
 for (const required of [
