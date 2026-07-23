@@ -169,6 +169,9 @@ final class AuthController extends BaseController
     public function logout(Request $r, array $p): never
     {
         Session::logout();
+        if ($r->wantsJson()) {
+            Response::json(['ok'=>true, 'redirect'=>$this->basePath . '/']);
+        }
         $this->redirect('/');
     }
 
@@ -186,4 +189,3 @@ final class AuthController extends BaseController
         }
     }
 }
-

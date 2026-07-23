@@ -14,4 +14,3 @@
 *.sqlite
 client_secret*.json
 /SNACKQUEST_AUTONOMOUS_MASTERPROMPT.md
-/scripts/deploy-snackquest.ps1

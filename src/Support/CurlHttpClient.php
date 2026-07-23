@@ -25,8 +25,10 @@ final class CurlHttpClient implements HttpClient
             CURLOPT_TIMEOUT        => max(1, $timeoutSeconds),
             CURLOPT_CONNECTTIMEOUT => min(5, $timeoutSeconds),
             CURLOPT_HTTPHEADER     => $headerLines,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_MAXREDIRS      => 3,
+            // Fail closed on redirects so manually supplied Authorization headers
+            // can never be forwarded to a different redirect target.
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_MAXREDIRS      => 0,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_USERAGENT      => 'SnackQuest/1.0',
@@ -45,4 +47,3 @@ final class CurlHttpClient implements HttpClient
         ];
     }
 }
-

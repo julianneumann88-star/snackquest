@@ -12,11 +12,12 @@ use SnackQuest\Http\Session;
 use SnackQuest\Router;
 
 (static function():void{
+    $method=strtoupper((string)($_SERVER['REQUEST_METHOD']??'GET'));if(!in_array($method,['GET','HEAD'],true))return;
     $uri=parse_url((string)($_SERVER['REQUEST_URI']??'/'),PHP_URL_PATH)?:'/';$rel=preg_replace('#^/snackquest/#','',$uri);
     if($rel===$uri||$rel===''||str_contains($rel,'..'))return;$file=__DIR__.'/'.$rel;$real=realpath($file);$root=realpath(__DIR__);
     if($real===false||$root===false||!is_file($real)||!str_starts_with($real,$root.DIRECTORY_SEPARATOR))return;
     $types=['css'=>'text/css','js'=>'application/javascript','mjs'=>'application/javascript','svg'=>'image/svg+xml','png'=>'image/png','webp'=>'image/webp','ico'=>'image/x-icon','webmanifest'=>'application/manifest+json','json'=>'application/json','xml'=>'application/xml','txt'=>'text/plain','woff2'=>'font/woff2'];$ext=strtolower(pathinfo($real,PATHINFO_EXTENSION));if(!isset($types[$ext]))return;
-    header('Content-Type: '.$types[$ext]);header('Cache-Control: public, max-age='.($rel==='sw.js'?0:604800));if($rel==='sw.js')header('Service-Worker-Allowed: /snackquest/');readfile($real);exit;
+    header('Content-Type: '.$types[$ext]);header('X-Content-Type-Options: nosniff');header('Cross-Origin-Resource-Policy: same-origin');header('Content-Length: '.filesize($real));header('Cache-Control: '.($rel==='sw.js'?'no-cache, no-store, must-revalidate':'public, max-age=604800'));if($rel==='sw.js')header('Service-Worker-Allowed: /snackquest/');if($method==='GET')readfile($real);exit;
 })();
 
 require dirname(__DIR__).'/src/bootstrap.php';
@@ -35,5 +36,6 @@ $router->get('/api/health',[ApiController::class,'health']);$router->get('/api/p
 $match=$router->match($request);if($match===null)Response::html(\SnackQuest\Support\View::render('pages/404',['title'=>'Seite nicht gefunden','flashes'=>[],'isLoggedIn'=>Session::userId()!==null]),404);
 [$handler,$params]=$match;[$class,$method]=$handler;$protected=str_starts_with($request->path,'/app')||str_starts_with($request->path,'/media')||(str_starts_with($request->path,'/api/')&&$request->path!=='/api/health');
 if($protected&&Session::userId()===null){if($request->wantsJson())Response::json(['error'=>'Nicht angemeldet.'],401);Session::flash('info','Bitte melde dich an, um SnackQuest zu nutzen.');Response::redirect($base,'/login');}
+if($request->isPost()&&strtolower((string)($request->server['HTTP_SEC_FETCH_SITE']??''))==='cross-site'){if($request->wantsJson())Response::json(['error'=>'Cross-Site-Anfrage abgelehnt.'],403);Response::html('<!doctype html><html lang="de"><meta charset="utf-8"><title>Anfrage abgelehnt</title><body><h1>Anfrage abgelehnt.</h1><p>Bitte öffne SnackQuest direkt und versuche es erneut.</p></body></html>',403);}
 if($request->isPost()&&!\SnackQuest\Http\Csrf::verify($request)){if($request->wantsJson())Response::json(['error'=>'Sitzung abgelaufen. Bitte Seite neu laden.'],419);Session::flash('error','Deine Sitzung ist abgelaufen. Bitte versuch es erneut.');Response::redirect($base,$request->path==='/logout'?'/':$request->path);}
 (new $class())->$method($request,$params);

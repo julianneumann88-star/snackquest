@@ -20,7 +20,8 @@ final class UploadService
         $max=(int)$this->config->get('uploads.max_bytes',8_000_000);if((int)($file['size']??0)<1||(int)$file['size']>$max)throw new \InvalidArgumentException('Das Bild ist zu groß. Maximal 8 MB sind erlaubt.');
         $tmp=(string)$file['tmp_name'];$finfo=new \finfo(FILEINFO_MIME_TYPE);$mime=(string)$finfo->file($tmp);$allowed=['image/jpeg'=>'jpg','image/png'=>'png','image/webp'=>'webp'];
         if(!isset($allowed[$mime]))throw new \InvalidArgumentException('Bitte lade ein JPEG-, PNG- oder WebP-Bild hoch.');
-        $size=@getimagesize($tmp);if(!$size||$size[0]<1||$size[1]<1||$size[0]>12000||$size[1]>12000)throw new \InvalidArgumentException('Die Bilddatei ist ungültig.');
+        $size=@getimagesize($tmp);$maxPixels=(int)$this->config->get('uploads.max_pixels',20_000_000);
+        if(!$size||$size[0]<1||$size[1]<1||$size[0]>8000||$size[1]>8000||((int)$size[0]*(int)$size[1])>$maxPixels)throw new \InvalidArgumentException('Die Bilddatei ist ungültig oder hat zu viele Bildpunkte.');
         $root=rtrim((string)$this->config->get('uploads.dir',dirname(__DIR__,2).'/storage/uploads'),'\\/');$dir=$root.'/'.$userId;
         if(!is_dir($dir)&&!mkdir($dir,0770,true)&&!is_dir($dir))throw new \RuntimeException('Upload-Verzeichnis nicht verfügbar.');
         $id=bin2hex(random_bytes(16));$relative=$userId.'/'.$kind.'-'.$id.'.webp';$dest=$root.'/'.$relative;$storedMime='image/webp';

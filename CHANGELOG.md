@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0 – 2026-07-23
+
+- Persönliches Snack-Los mit positiv gewichteter Auswahl und Schutz vor direkten Wiederholungen
+- Zuletzt erkannte Barcodes bleiben in der privaten Sitzung für schnellen Wiederzugriff verfügbar
+- Bewertungsentwürfe werden lokal zwischengespeichert und offline robust sowie idempotent synchronisiert
+- Aktive Navigation, größere Touch-Ziele, taktiles Feedback und mobile Speicherleiste verbessern die Bedienung
+- Private, tokenisierte und widerrufbare Seiten sind vollständig vom PWA-Cache ausgeschlossen
+- Sitzungen, Response-Caching, Browser-Isolation und Cross-Site-POST-Schutz wurden gehärtet
+
 ## 1.0.2 – 2026-07-22
 
 - Versionierte PWA- und Apple-Touch-Icons verhindern, dass iOS nach einem Markenupdate das alte Home-Screen-Logo wiederverwendet.

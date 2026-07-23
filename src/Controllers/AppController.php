@@ -10,13 +10,34 @@ use SnackQuest\Http\RateLimiter;
 use SnackQuest\Http\Response;
 use SnackQuest\Http\Session;
 use SnackQuest\Services\BarcodeService;
+use SnackQuest\Services\ProductService;
 
 final class AppController extends BaseController
 {
     public function dashboard(Request $r,array $p):never
     {
         $user=$this->currentUser();if(!(int)$user['onboarding_completed'])$this->redirect('/app/onboarding');
-        $this->render('app/dashboard',['title'=>'Deine SnackQuest','dashboard'=>$this->products->dashboard($this->userId()),'quest'=>$this->games->currentQuest($this->userId())],'layouts/app');
+        $pick = null;
+        if ($r->q('pick') === '1') {
+            $history = Session::get('_snack_pick_history', []);
+            $pick = $this->products->pickForUser($this->userId(), is_array($history) ? $history : []);
+            if ($pick !== null) {
+                $pickedKey = (string)$pick['product_key'];
+                $keys = array_values(array_filter(
+                    is_array($history) ? $history : [],
+                    static fn(mixed $key): bool => is_string($key) && $key !== $pickedKey
+                ));
+                $keys[] = $pickedKey;
+                Session::set('_snack_pick_history', array_slice($keys, -8));
+            }
+        }
+        $this->render('app/dashboard',[
+            'title'=>'Deine SnackQuest',
+            'dashboard'=>$this->products->dashboard($this->userId()),
+            'quest'=>$this->games->currentQuest($this->userId()),
+            'snackPick'=>$pick,
+            'pickRequested'=>$r->q('pick') === '1',
+        ],'layouts/app');
     }
 
     public function onboardingForm(Request $r,array $p):never{$this->render('app/onboarding',['title'=>'Dein Geschmack','user'=>$this->currentUser()],'layouts/app');}
@@ -26,7 +47,14 @@ final class AppController extends BaseController
         Session::flash('success','Dein Profil ist bereit. Zeit für den ersten Scan.');$this->redirect('/app/scan');
     }
 
-    public function scan(Request $r,array $p):never{$this->render('app/scan',['title'=>'Snack scannen'],'layouts/app');}
+    public function scan(Request $r,array $p):never
+    {
+        $recent = Session::get('_recent_scans', []);
+        $this->render('app/scan',[
+            'title'=>'Snack scannen',
+            'recentScans'=>is_array($recent) ? array_slice($recent, 0, 5) : [],
+        ],'layouts/app');
+    }
     public function scanManual(Request $r,array $p):never
     {
         $barcode=BarcodeService::normalize($r->p('barcode','')??'');if(!BarcodeService::validate($barcode)){Session::flash('error','Dieser Barcode ist ungültig. Prüfe bitte alle Ziffern.');$this->redirect('/app/scan');}
@@ -38,6 +66,7 @@ final class AppController extends BaseController
         $barcode=BarcodeService::normalize((string)($p['barcode']??''));$result=$this->off->find($barcode,$r->q('refresh')==='1');
         if($result['status']==='invalid'){Session::flash('error',(string)$result['error']);$this->redirect('/app/scan');}
         if($result['product']===null){$this->render('app/product-missing',['title'=>'Produkt nicht gefunden','barcode'=>$barcode,'sourceStatus'=>$result['status'],'sourceError'=>$result['error']],'layouts/app');}
+        $this->rememberScan($result['product']);
         $entry=$this->products->findEntryByKey($this->userId(),'off:'.$barcode);
         $this->render('app/product',['title'=>($result['product']['name']??'Produkt').' · SnackQuest','product'=>$result['product'],'entry'=>$entry,'tags'=>$this->products->allTags(),'prices'=>$entry?$this->products->prices($this->userId(),(string)$entry['product_key']):[],'entryTags'=>$entry?$this->products->tagsForEntry((int)$entry['id']):[],'cached'=>$result['cached'],'sourceStatus'=>$result['status']],'layouts/app');
     }
@@ -58,6 +87,13 @@ final class AppController extends BaseController
         try{
             $input=$r->post;$input['tags']=$r->pArray('tags');$entryId=$this->products->saveReview($this->userId(),$product,$input);
             if(isset($_FILES['review_photo'])){$upload=$this->uploads->image($_FILES['review_photo'],$this->userId(),'review');if($upload)$this->products->saveReviewPhoto($this->userId(),$entryId,$upload,(string)$product['name']);}
+            Session::set('_clear_review_draft', (string)$product['key']);
+            $saved=$this->products->findEntry($this->userId(),$entryId);
+            $clientDraftAt=$r->p('_client_draft_at','')??'';
+            $clearBefore=preg_match('/^\d{13}$/D',$clientDraftAt)===1
+                ? (int)$clientDraftAt
+                : ($saved?ProductService::parseDatabaseUtc((string)$saved['updated_at'])*1000+999:0);
+            Session::set('_clear_review_before',$clearBefore);
             Session::flash('success','Bewertung gespeichert — dein Snack-Gedächtnis ist aktualisiert.');$this->redirect('/app/entry/'.$entryId);
         }catch(\InvalidArgumentException $e){Session::flash('error',$e->getMessage());$target=$type==='custom'?'/app/custom/'.(int)$r->p('custom_id','0'):'/app/product/'.rawurlencode((string)$r->p('barcode',''));$this->redirect($target);}
     }
@@ -129,9 +165,14 @@ final class AppController extends BaseController
     public function accountExport(Request $r,array $p):never{Response::jsonDownload($this->auth->exportUserData($this->userId()),'snackquest-export-'.gmdate('Y-m-d').'.json');}
     public function accountDelete(Request $r,array $p):never
     {
-        if($r->p('confirm')!=='KONTO LÖSCHEN'){Session::flash('error','Gib zur Bestätigung exakt „KONTO LÖSCHEN“ ein.');$this->redirect('/app/account');}
+        if($r->p('confirm')!=='KONTO LÖSCHEN'){
+            if($r->wantsJson())Response::json(['ok'=>false,'error'=>'Gib zur Bestätigung exakt „KONTO LÖSCHEN“ ein.'],422);
+            Session::flash('error','Gib zur Bestätigung exakt „KONTO LÖSCHEN“ ein.');$this->redirect('/app/account');
+        }
         $paths=[];foreach(['review_photos'=>['user_id','storage_path'],'custom_products'=>['owner_user_id','image_path']] as $name=>[$owner,$col]){$t=Database::table($name);$s=Database::pdo()->prepare("SELECT {$col} FROM {$t} WHERE {$owner}=:u");$s->execute(['u'=>$this->userId()]);$paths=array_merge($paths,array_filter($s->fetchAll(\PDO::FETCH_COLUMN)));}
-        $id=$this->userId();$this->auth->deleteAccount($id);foreach($paths as $path){$absolute=$this->uploads->absolute((string)$path);if($absolute)@unlink($absolute);}Session::logout();Response::redirect($this->basePath,'/');
+        $id=$this->userId();$this->auth->deleteAccount($id);foreach($paths as $path){$absolute=$this->uploads->absolute((string)$path);if($absolute)@unlink($absolute);}Session::logout();
+        if($r->wantsJson())Response::json(['ok'=>true,'redirect'=>$this->basePath.'/']);
+        Response::redirect($this->basePath,'/');
     }
 
     public function media(Request $r,array $p):never
@@ -139,8 +180,28 @@ final class AppController extends BaseController
         $kind=(string)($p['kind']??'');$id=(int)($p['id']??0);$path='';$mime='image/webp';
         if($kind==='review'){$t=Database::table('review_photos');$s=Database::pdo()->prepare("SELECT storage_path,mime_type FROM {$t} WHERE id=:id AND user_id=:u");$s->execute(['id'=>$id,'u'=>$this->userId()]);$row=$s->fetch();if($row){$path=$row['storage_path'];$mime=$row['mime_type'];}}
         elseif($kind==='custom'){$t=Database::table('custom_products');$s=Database::pdo()->prepare("SELECT image_path FROM {$t} WHERE id=:id AND owner_user_id=:u");$s->execute(['id'=>$id,'u'=>$this->userId()]);$path=(string)($s->fetchColumn()?:'');}
-        $absolute=$this->uploads->absolute($path);if(!$absolute)$this->notFound();header('Content-Type: '.$mime);header('Cache-Control: private, max-age=300');header('Content-Length: '.filesize($absolute));readfile($absolute);exit;
+        $absolute=$this->uploads->absolute($path);if(!$absolute)$this->notFound();header('Content-Type: '.$mime);header('Cache-Control: private, no-store');header('Vary: Cookie');header('Content-Length: '.filesize($absolute));readfile($absolute);exit;
     }
 
     private function notFound():never{Response::html(\SnackQuest\Support\View::render('pages/404',['title'=>'Seite nicht gefunden','flashes'=>[],'isLoggedIn'=>Session::userId()!==null]),404);}
+
+    private function rememberScan(array $product): void
+    {
+        $barcode = BarcodeService::normalize((string)($product['barcode'] ?? ''));
+        if (!BarcodeService::validate($barcode)) {
+            return;
+        }
+        $recent = Session::get('_recent_scans', []);
+        $recent = is_array($recent) ? $recent : [];
+        $recent = array_values(array_filter(
+            $recent,
+            static fn(mixed $item): bool => is_array($item) && ($item['barcode'] ?? '') !== $barcode
+        ));
+        array_unshift($recent, [
+            'barcode' => $barcode,
+            'name' => mb_substr(trim((string)($product['name'] ?? 'Unbenanntes Produkt')), 0, 240),
+            'brand' => mb_substr(trim((string)($product['brand'] ?? '')), 0, 160),
+        ]);
+        Session::set('_recent_scans', array_slice($recent, 0, 5));
+    }
 }
